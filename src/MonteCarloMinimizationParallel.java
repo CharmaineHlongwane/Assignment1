@@ -1,3 +1,4 @@
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
 import java.util.*;
 
@@ -10,36 +11,62 @@ public class MonteCarloMinimizationParallel extends RecursiveTask<Integer>{
     int searches_density;
     static int num_searches;
     int min = Integer.MAX_VALUE;// OUR GLOBAL MIN
-    INT local_min = Integer.MAX_VALUE;
-    SearchParallel[] searches;// CLASS ARRAY
-
-    MonteCarloMinimizationParallel(SearchParallel [] search){// takes the arguments for proccessing
-
+    int local_min = Integer.MAX_VALUE;
+    static SearchParallel[] searches;// CLASS ARRAY
+    static Random rand = new Random();// random number generator
+    int high, low;
+    
+    /**Takes the following arguments
+     * @param search the array of search object, FJ divides it until size< sequential cutoff.
+     * @param lw start of the array
+     * @param hgh the num of total searches
+     */
+    MonteCarloMinimizationParallel(SearchParallel [] search, int lw, int hgh){// takes the arguments for proccessing
+        low = lw;
+        high = hgh;
+        searches = search;
     }
-
-    //processes the searches equeal to sqc if not split and compute the other half
+    int getFinder(int finder){// delete this when you get a chance, you have it in the SP.java
+        return finder;
+    }
+    //processes the searches equal to sqc if not split and compute the other half
     protected Integer compute(){
-
-        if( num_searches < SEQUENTIAL_CUTOFF){
+        int finder = -1;
+        //each thread returns its own min find a way to compare the mins between the two.
+        if( high - low < SEQUENTIAL_CUTOFF){// high - low
             for(int i = 0; i< num_searches; i++){// attempts to find the local min
-                local_min = searches[i].findValleys();// requires array in main so pass to constructor
-                
+                local_min = searches[i].find_valleys();// requires array in main so pass to constructor
+                if((!searches[i].isStopped())&& local_min<min){
+                    min = local_min;// setting the lowest min found to our global min
+                    finder = i;
+                    
+
+                }
             }
-            return 1;
+            return min;
         }
         
-        else{// complete arguments 
-            MonteCarloMinimizationParallel right = new MonteCarloMinimizationParallel(searches);// FIX THESE TWO "SEARCHES"
-            MonteCarloMinimizationParallel left = new MonteCarloMinimizationParallel(searches);
+        else{//fork-join 
+            MonteCarloMinimizationParallel right = new MonteCarloMinimizationParallel(searches, low,(high+low)/2);// FIX THESE TWO "SEARCHES"
+            MonteCarloMinimizationParallel left = new MonteCarloMinimizationParallel(searches, (low+high)/2,high);
             left.fork();
-            right.compute();
-            left.join();
+            int right_min = right.compute();// returns min for left and right
+            int left_min = left.join();
+            int global_min = Math.min(right_min, left_min);// gives us our global min
+            // how would you find the finder, think about it 
+            if(left_min < right_min){
+                global_min = left_min;
+
+            }
      }
     }
     
 
 
     /**
+     * The main class takes arguments from the user, creates a terain area, then creates an array of search object
+     * Creates a MonteCarloMinP object that takes the array and then passes the object to a FJPool object which returns the global minimum
+     * Then prints the output.
      * @param args
      */
     public static void main(String[] args){
@@ -60,15 +87,31 @@ public class MonteCarloMinimizationParallel extends RecursiveTask<Integer>{
             TerrainArea  terrain = new TerrainArea(row, column, xmin, xmax, ymin, ymax);
             num_searches = (int)(column*row*searches_density);
             SearchParallel[] search = new SearchParallel[num_searches];
-            for(int i = 0; i<num_searches, i++){
+            for(int i = 0; i<num_searches; i++){
+                
                 searches[i] = new SearchParallel(i+1, rand.nextInt(row), rand.nextInt(column), terrain);// need to pass this to the parallel version
             }
-
-            MonteCarloMinimizationParallel parallelSearch = new MonteCarloMinimizationParallel();// FILL IT WITH ARGUMENTS!!
+            int lower = 0;// initializer for the searches array
+            MonteCarloMinimizationParallel parallelSearch = new MonteCarloMinimizationParallel(search, lower, num_searches);// takes array of type PS with start and end
             ForkJoinPool pool = new ForkJoinPool();// creating pool of worker threads
-            pool.invoke(parallelSearch);
+            tick();
+            int globby = pool.invoke(parallelSearch);// get our global min into main
+            tock();
+            // after it returns the min the print following arguments
+            System.out.printf("Run parameters\n");
+		    System.out.printf("\t Rows: %d, Columns: %d\n", row, column);
+		    System.out.printf("\t x: [%f, %f], y: [%f, %f]\n", xmin, xmax, ymin, ymax );
+		    System.out.printf("\t Search density: %f (%d searches)\n", searches_density,num_searches );
 
-
+		/*  Total computation time */
+		    System.out.printf("Time: %d ms\n",endTime - startTime );
+		    int tmp=terrain.getGrid_points_visited();
+		    System.out.printf("Grid points visited: %d  (%2.0f%s)\n",tmp,(tmp/(row*column*1.0))*100.0, "%");
+		    tmp=terrain.getGrid_points_evaluated();
+		    System.out.printf("Grid points evaluated: %d  (%2.0f%s)\n",tmp,(tmp/(row*column*1.0))*100.0, "%");
+	
+		    /* Results*/
+		    System.out.printf("Global minimum: %d at x=%.1f y=%.1f\n\n", globby, terrain.getXcoord(searches[1].getPos_row()), terrain.getYcoord(searches[1].getPos_col()) );// replace 1 with finder
         }
 
         
@@ -77,7 +120,6 @@ public class MonteCarloMinimizationParallel extends RecursiveTask<Integer>{
 
     private static void tick(){
         static long startTime = System.currentTimeMillis();
-
     }
     private static void tock(){
         static long endTime = System.currentTimeMillis();
