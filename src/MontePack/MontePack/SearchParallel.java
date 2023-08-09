@@ -80,12 +80,7 @@ public class SearchParallel {
 	public boolean isStopped() {
 		return stopped;
 	}
-    public void setfinderID(int i){
-        finder = i;// come back to these tewo
-    }
-
-    public int getFinder(){
-        return finder;
+    
     }
 
 }
