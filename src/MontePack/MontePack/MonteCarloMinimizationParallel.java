@@ -27,12 +27,18 @@ public class MonteCarloMinimizationParallel extends RecursiveTask<Integer>{
         high = hgh;
         searches = search;
     }
-    int getFinder(int finder){// delete this when you get a chance, you have it in the SP.java
+    void setFinder(int boss){// delete this when you get a chance, you have it in the SP.java
+        finder = boss;
+    }
+    static int getFinder(){
         return finder;
     }
     //processes the searches equal to sqc if not split and compute the other half
+    static int finder = -1;
+    int global_min = 0;
+    ArrayList<Integer> found = new ArrayList<Integer>();
     protected Integer compute(){
-        int finder = -1;
+        
         //each thread returns its own min find a way to compare the mins between the two.
         if( high - low < SEQUENTIAL_CUTOFF){// high - low
             for(int i = 0; i< num_searches; i++){// attempts to find the local min
@@ -40,8 +46,9 @@ public class MonteCarloMinimizationParallel extends RecursiveTask<Integer>{
                 if((!searches[i].isStopped())&& local_min<min){
                     min = local_min;// setting the lowest min found to our global min
                     finder = i;
+                    found.add(min);// created finder tracker
+                    found.add(finder);
                     return min;
-
                 }
             }
             
@@ -53,14 +60,25 @@ public class MonteCarloMinimizationParallel extends RecursiveTask<Integer>{
             left.fork();
             int right_min = right.compute();// returns min for left and right
             int left_min = left.join();
-            int global_min = Math.min(right_min, left_min);// gives us our global min
+            global_min = Math.min(right_min, left_min);// gives us our global min
             // how would you find the finder, think about it 
             if(left_min < right_min){
                 global_min = left_min;
 
             }
+            else{
+                global_min = right_min;
+            }
+            for(int find : found ){ // setting the finder to the min index
+                if(find == global_min){
+                    int indexFind = found.indexOf(find);// will make code slower, try to find an efficient way to do this.
+                    setFinder(found.get(indexFind + 1));
+
+                }
+            }
+            
      }
-        return finder;
+        return global_min;
     }
     
 
@@ -116,7 +134,7 @@ public class MonteCarloMinimizationParallel extends RecursiveTask<Integer>{
 		    System.out.printf("Grid points evaluated: %d  (%2.0f%s)\n",tmp,(tmp/(row*column*1.0))*100.0, "%");
 	
 		    /* Results*/
-		    System.out.printf("Global minimum: %d at x=%.1f y=%.1f\n\n", globby, terrain.getXcoord(searches[1].getPos_row()), terrain.getYcoord(searches[1].getPos_col()) );// replace 1 with finder
+		    System.out.printf("Global minimum: %d at x=%.1f y=%.1f\n\n", globby, terrain.getXcoord(searches[getFinder()].getPos_row()), terrain.getYcoord(searches[getFinder()].getPos_col()) );// replace 1 with finder
         }
 
         
