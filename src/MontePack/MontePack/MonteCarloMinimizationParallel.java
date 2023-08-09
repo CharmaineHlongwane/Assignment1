@@ -1,3 +1,4 @@
+package MontePack;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
 import java.util.*;
@@ -39,11 +40,11 @@ public class MonteCarloMinimizationParallel extends RecursiveTask<Integer>{
                 if((!searches[i].isStopped())&& local_min<min){
                     min = local_min;// setting the lowest min found to our global min
                     finder = i;
-                    
+                    return min;
 
                 }
             }
-            return min;
+            
         }
         
         else{//fork-join 
@@ -59,6 +60,7 @@ public class MonteCarloMinimizationParallel extends RecursiveTask<Integer>{
 
             }
      }
+        return finder;
     }
     
 
@@ -91,6 +93,9 @@ public class MonteCarloMinimizationParallel extends RecursiveTask<Integer>{
                 
                 searches[i] = new SearchParallel(i+1, rand.nextInt(row), rand.nextInt(column), terrain);// need to pass this to the parallel version
             }
+
+            
+
             int lower = 0;// initializer for the searches array
             MonteCarloMinimizationParallel parallelSearch = new MonteCarloMinimizationParallel(search, lower, num_searches);// takes array of type PS with start and end
             ForkJoinPool pool = new ForkJoinPool();// creating pool of worker threads
@@ -118,12 +123,15 @@ public class MonteCarloMinimizationParallel extends RecursiveTask<Integer>{
 
     }
 
+    // START AND END TIME
+    static long startTime = 0;
+    static long endTime = 0;
     private static void tick(){
-        static long startTime = System.currentTimeMillis();
+         startTime = System.currentTimeMillis();
     }
     private static void tock(){
-        static long endTime = System.currentTimeMillis();
+         endTime = System.currentTimeMillis();
     }
 
-    }
 }
+

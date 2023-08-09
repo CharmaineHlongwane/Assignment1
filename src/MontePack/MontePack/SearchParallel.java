@@ -1,4 +1,4 @@
-
+package MontePack;
 /*Charmaine Hlongwane, HLNTHA025
  * 06/08/2023
  * Parallelized version of search algorithm

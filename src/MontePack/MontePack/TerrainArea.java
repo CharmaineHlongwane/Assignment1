@@ -1,5 +1,4 @@
-
-import SearchParallel.Direction;
+package MontePack;
 
 public class TerrainArea  {
 	
@@ -67,36 +66,36 @@ public class TerrainArea  {
 	}
 
 	//work out where to go next - move downhill
-	Direction next_step( int x, int y) {
-		Direction climb_direction =Direction.STAY_HERE;
+	MontePack.SearchParallel.Direction next_step( int x, int y) {
+		MontePack.SearchParallel.Direction climb_direction =MontePack.SearchParallel.Direction.STAY_HERE;
 		int height;
 		int local_min= get_height(x, y);
 		if ( x > 0 ) {
 			height=get_height(x-1, y);
 			if (height<local_min) {
 				local_min=height;
-				climb_direction = Direction.LEFT;
+				climb_direction = MontePack.SearchParallel.Direction.LEFT;
 			}
 		}
 		if ( x < (rows-1) ) {
 			height=get_height(x+1, y);
 			if (height<local_min) {
 				local_min=height;
-				climb_direction = Direction.RIGHT;
+				climb_direction = MontePack.SearchParallel.Direction.RIGHT;
 			}
 		}
 		if ( y > 0 ) {
 			height=get_height(x, y-1);
 			if (height<local_min) {
 				local_min=height;
-				climb_direction = Direction.UP;
+				climb_direction = MontePack.SearchParallel.Direction.UP;
 			}
 		}
 		if ( y < (columns-1) ) {
 			height=get_height(x, y+1);
 			if (height<local_min) {
 				local_min=height;
-				climb_direction = Direction.DOWN;
+				climb_direction = MontePack.SearchParallel.Direction.DOWN;// check Michelles code for a fix on this
 			}
 		}
 		return climb_direction;
