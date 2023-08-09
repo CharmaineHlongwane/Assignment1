@@ -4,7 +4,7 @@
 #confirm if you shouldn't add the package info in your makefile
 #Confirm that its not MP.MCMP.java
 .SUFFIXES: .java .class
-SRCDIR=src
+SRCDIR=src/MontePack/MontePack
 BINDIR=bin
 DOCDIR=docs
 JAVAC=/usr/bin/javac
