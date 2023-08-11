@@ -46,8 +46,7 @@ public class MonteCarloMinimizationParallel extends RecursiveTask<Integer>{
                 if((!searches[i].isStopped())&& local_min<min){
                     min = local_min;// setting the lowest min found to our global min
                     finder = i;
-                    //found.add(min);// created finder tracker
-                   // found.add(finder);
+                
                     return min;
                 }
             }
@@ -70,13 +69,6 @@ public class MonteCarloMinimizationParallel extends RecursiveTask<Integer>{
                 global_min = right_min;
             }
              
-            //for(int find : found ){ // setting the finder to the min index
-               // if(find == global_min){
-                   // int indexFind = found.indexOf(find);// will make code slower, try to find an efficient way to do this.
-                   // setFinder(found.get(indexFind + 1));
-
-                //}
-           // }
             
      }
         return global_min;
